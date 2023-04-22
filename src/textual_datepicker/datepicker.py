@@ -4,6 +4,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from textual.app import ComposeResult
 from textual.containers import Horizontal
+from textual.coordinate import Coordinate
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input
 
@@ -47,6 +48,7 @@ class DatePicker(Widget, can_focus=True):
     ) -> None:
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
         self.date = date
+        self._month_calendar = self._create_month_calendar()
 
     def compose(self) -> ComposeResult:
         yield Input(self.date.strftime("%F"))
@@ -66,6 +68,7 @@ class DatePicker(Widget, can_focus=True):
         table = self.query_one(DataTable)
         table.add_columns(*list(calendar.day_abbr))
         self._update_month_table()
+        self._set_highlighted_day()
 
     def update(self, date: datetime.date) -> None:
         old_date = self.date
@@ -78,17 +81,35 @@ class DatePicker(Widget, can_focus=True):
             if old_date.month != self.date.month:
                 self.query_one("#month", Button).label = self.date.strftime("%B")
 
+        self._month_calendar = self._create_month_calendar()
         self.query_one(Input).value = self.date.strftime("%F")
+        self._set_highlighted_day()
 
-    def _update_month_table(self) -> None:
-        table = self.query_one(DataTable)
-        table.clear()
+    def _create_month_calendar(self) -> list[list[int | None]]:
         month_calendar = [
             [day if day != 0 else None for day in week]
             for week in calendar.monthcalendar(self.date.year, self.date.month)
         ]
 
+        return month_calendar
+
+    def _update_month_table(self) -> None:
+        table = self.query_one(DataTable)
+        table.clear()
+        month_calendar = self._create_month_calendar()
+
         table.add_rows(month_calendar)
+
+    def _set_highlighted_day(self) -> None:
+        table = self.query_one(DataTable)
+        day = self.date.day
+        for row, week in enumerate(self._month_calendar):
+            try:
+                column = week.index(day)
+            except ValueError:
+                pass
+            else:
+                table.cursor_coordinate = Coordinate(row, column)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prev-month-btn":
