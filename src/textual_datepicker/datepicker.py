@@ -4,7 +4,6 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input
 
@@ -38,7 +37,16 @@ class DatePicker(Widget, can_focus=True):
     }
     """
 
-    date = reactive(datetime.date(2023, 1, 1))
+    def __init__(
+        self,
+        date: datetime.date = datetime.date.today(),
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
+        self.date = date
 
     def compose(self) -> ComposeResult:
         yield Input(self.date.strftime("%F"))
