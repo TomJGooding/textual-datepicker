@@ -83,3 +83,8 @@ class DatePicker(Widget, can_focus=True):
         self.query_one("#month", Button).label = self.date.strftime("%B")
         self.query_one("#year", Button).label = self.date.strftime("%Y")
         self._update_month_table()
+
+    def on_data_table_cell_selected(self, event: DataTable.CellSelected) -> None:
+        if isinstance(event.value, int):
+            self.date = self.date.replace(day=event.value)
+            self.query_one(Input).value = self.date.strftime("%F")
