@@ -125,6 +125,14 @@ class DatePicker(Widget, can_focus=True):
 
         self.update(new_date)
 
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        try:
+            new_date = datetime.datetime.strptime(event.value, "%Y-%m-%d").date()
+        except ValueError:
+            self.query_one(Input).value = self.date.strftime("%F")
+        else:
+            self.update(new_date)
+
     def on_data_table_cell_selected(self, event: DataTable.CellSelected) -> None:
         if isinstance(event.value, int):
             new_date = self.date.replace(day=event.value)
