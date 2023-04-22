@@ -67,6 +67,19 @@ class DatePicker(Widget, can_focus=True):
         table.add_columns(*list(calendar.day_abbr))
         self._update_month_table()
 
+    def update(self, date: datetime.date) -> None:
+        old_date = self.date
+        self.date = date
+
+        if old_date.year != self.date.year or old_date.month != self.date.month:
+            self._update_month_table()
+            if old_date.year != self.date.year:
+                self.query_one("#year", Button).label = self.date.strftime("%Y")
+            if old_date.month != self.date.month:
+                self.query_one("#month", Button).label = self.date.strftime("%B")
+
+        self.query_one(Input).value = self.date.strftime("%F")
+
     def _update_month_table(self) -> None:
         table = self.query_one(DataTable)
         table.clear()
@@ -79,20 +92,19 @@ class DatePicker(Widget, can_focus=True):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prev-month-btn":
-            self.date -= relativedelta(months=1)
+            new_date = self.date - relativedelta(months=1)
         elif event.button.id == "next-month-btn":
-            self.date += relativedelta(months=1)
+            new_date = self.date + relativedelta(months=1)
         elif event.button.id == "prev-year-btn":
-            self.date -= relativedelta(years=1)
+            new_date = self.date - relativedelta(years=1)
         elif event.button.id == "next-year-btn":
-            self.date += relativedelta(years=1)
+            new_date = self.date + relativedelta(years=1)
+        else:
+            return
 
-        self.query_one(Input).value = self.date.strftime("%F")
-        self.query_one("#month", Button).label = self.date.strftime("%B")
-        self.query_one("#year", Button).label = self.date.strftime("%Y")
-        self._update_month_table()
+        self.update(new_date)
 
     def on_data_table_cell_selected(self, event: DataTable.CellSelected) -> None:
         if isinstance(event.value, int):
-            self.date = self.date.replace(day=event.value)
-            self.query_one(Input).value = self.date.strftime("%F")
+            new_date = self.date.replace(day=event.value)
+            self.update(new_date)
