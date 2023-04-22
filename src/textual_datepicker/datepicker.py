@@ -1,5 +1,6 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.reactive import reactive
@@ -65,3 +66,17 @@ class DatePicker(Widget, can_focus=True):
         table = self.query_one(DataTable)
         table.add_columns(*MONTH[0])
         table.add_rows(MONTH[1:])
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "prev-month-btn":
+            self.date -= relativedelta(months=1)
+        elif event.button.id == "next-month-btn":
+            self.date += relativedelta(months=1)
+        elif event.button.id == "prev-year-btn":
+            self.date -= relativedelta(years=1)
+        elif event.button.id == "next-year-btn":
+            self.date += relativedelta(years=1)
+
+        self.query_one(Input).value = self.date.strftime("%F")
+        self.query_one("#month", Button).label = self.date.strftime("%B")
+        self.query_one("#year", Button).label = self.date.strftime("%Y")
