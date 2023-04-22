@@ -1,3 +1,4 @@
+import calendar
 import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -6,15 +7,6 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input
-
-MONTH = [
-    ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"),
-    ("1", "2", "3", "4", "5", "6", "7"),
-    ("8", "9", "10", "11", "12", "13", "14"),
-    ("15", "16", "17", "18", "19", "20", "21"),
-    ("22", "23", "24", "25", "26", "27", "28"),
-    ("29", "30", "31", "", "", "", ""),
-]
 
 
 class DatePicker(Widget, can_focus=True):
@@ -64,8 +56,18 @@ class DatePicker(Widget, can_focus=True):
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        table.add_columns(*MONTH[0])
-        table.add_rows(MONTH[1:])
+        table.add_columns(*list(calendar.day_abbr))
+        self._update_month_table()
+
+    def _update_month_table(self) -> None:
+        table = self.query_one(DataTable)
+        table.clear()
+        month_calendar = [
+            [day if day != 0 else None for day in week]
+            for week in calendar.monthcalendar(self.date.year, self.date.month)
+        ]
+
+        table.add_rows(month_calendar)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prev-month-btn":
@@ -80,3 +82,4 @@ class DatePicker(Widget, can_focus=True):
         self.query_one(Input).value = self.date.strftime("%F")
         self.query_one("#month", Button).label = self.date.strftime("%B")
         self.query_one("#year", Button).label = self.date.strftime("%Y")
+        self._update_month_table()
