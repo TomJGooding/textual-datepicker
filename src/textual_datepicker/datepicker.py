@@ -54,6 +54,21 @@ class DatePicker(Widget, can_focus=True):
         width: auto;
         min-height: 7;
     }
+
+    DatePicker #calendar-days-table .datatable--header {
+        background: $surface;
+        color: $text-disabled;
+    }
+
+    DatePicker #calendar-days-table .datatable--header-cursor {
+        background: $surface;
+        color: $text-disabled;
+    }
+
+    DatePicker #calendar-days-table .datatable--header-hover {
+        background: $surface;
+        color: $text-disabled;
+    }
     """
 
     def __init__(
