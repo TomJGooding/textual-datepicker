@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.coordinate import Coordinate
 from textual.widget import Widget
-from textual.widgets import Button, DataTable
+from textual.widgets import Button, DataTable, Label
 
 
 class DatePicker(Widget, can_focus=True):
@@ -19,6 +19,23 @@ class DatePicker(Widget, can_focus=True):
     DatePicker DataTable {
         height: auto;
         width: auto;
+    }
+
+    DatePicker > .header {
+        width: 100%;
+        background: $primary;
+        color: $text;
+    }
+
+    DatePicker #title {
+        text-style: bold;
+        padding-left: 1;
+        padding-bottom: 1;
+    }
+
+    DatePicker #subtitle {
+        padding-left: 1;
+        padding-top: 1;
     }
 
     DatePicker Button {
@@ -51,6 +68,8 @@ class DatePicker(Widget, can_focus=True):
         self._month_calendar = self._create_month_calendar()
 
     def compose(self) -> ComposeResult:
+        yield Label(self.date.strftime("%Y"), classes="header", id="subtitle")
+        yield Label(self.date.strftime("%a, %b %d"), classes="header", id="title")
         with Horizontal(id="date-navigation"):
             yield Button("←", classes="left-arrow-btn", id="prev-month-btn")
             yield Button(self.date.strftime("%B"), id="month", disabled=True)
@@ -75,10 +94,12 @@ class DatePicker(Widget, can_focus=True):
         if old_date.year != self.date.year or old_date.month != self.date.month:
             self._update_month_table()
             if old_date.year != self.date.year:
+                self.query_one("#subtitle", Label).update(self.date.strftime("%Y"))
                 self.query_one("#year", Button).label = self.date.strftime("%Y")
             if old_date.month != self.date.month:
                 self.query_one("#month", Button).label = self.date.strftime("%B")
 
+        self.query_one("#title", Label).update(self.date.strftime("%a, %b %d"))
         self._month_calendar = self._create_month_calendar()
         self._set_highlighted_day()
 
