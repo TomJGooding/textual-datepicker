@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.coordinate import Coordinate
 from textual.widget import Widget
-from textual.widgets import Button, DataTable, Input
+from textual.widgets import Button, DataTable
 
 
 class DatePicker(Widget, can_focus=True):
@@ -51,8 +51,6 @@ class DatePicker(Widget, can_focus=True):
         self._month_calendar = self._create_month_calendar()
 
     def compose(self) -> ComposeResult:
-        yield Input(self.date.strftime("%F"))
-
         with Horizontal(id="date-navigation"):
             yield Button("←", classes="left-arrow-btn", id="prev-month-btn")
             yield Button(self.date.strftime("%B"), id="month", disabled=True)
@@ -82,7 +80,6 @@ class DatePicker(Widget, can_focus=True):
                 self.query_one("#month", Button).label = self.date.strftime("%B")
 
         self._month_calendar = self._create_month_calendar()
-        self.query_one(Input).value = self.date.strftime("%F")
         self._set_highlighted_day()
 
     def _create_month_calendar(self) -> list[list[int | None]]:
@@ -124,14 +121,6 @@ class DatePicker(Widget, can_focus=True):
             return
 
         self.update(new_date)
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        try:
-            new_date = datetime.datetime.strptime(event.value, "%Y-%m-%d").date()
-        except ValueError:
-            self.query_one(Input).value = self.date.strftime("%F")
-        else:
-            self.update(new_date)
 
     def on_data_table_cell_selected(self, event: DataTable.CellSelected) -> None:
         if isinstance(event.value, int):
