@@ -14,6 +14,11 @@ class DatePicker(Widget, can_focus=True):
     DatePicker {
         height: auto;
         width: auto;
+        border: round $panel-lighten-2;
+    }
+
+    DatePicker:focus {
+        border: round $accent;
     }
 
     DatePicker > .header {
