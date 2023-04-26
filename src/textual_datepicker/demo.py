@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Footer
 
-from textual_datepicker.datepicker import DatePicker
+from textual_datepicker.datepicker import DateInput, DatePicker
 
 
 class DatePickerDemo(App):
@@ -15,11 +15,9 @@ class DatePickerDemo(App):
     ]
 
     def compose(self) -> ComposeResult:
+        yield DateInput()
         yield DatePicker()
         yield Footer()
-
-    def on_mount(self) -> None:
-        self.query_one(DatePicker).focus()
 
 
 if __name__ == "__main__":
