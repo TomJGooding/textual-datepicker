@@ -81,7 +81,7 @@ class DatePicker(Widget, can_focus=True):
     ) -> None:
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
         self.date = date
-        self._month_calendar = self._create_month_calendar()
+        self._month_calendar = self._get_month_calendar()
 
     def compose(self) -> ComposeResult:
         yield Label(self.date.strftime("%Y"), classes="header", id="subtitle")
@@ -109,6 +109,7 @@ class DatePicker(Widget, can_focus=True):
         self.date = date
 
         if old_date.year != self.date.year or old_date.month != self.date.month:
+            self._month_calendar = self._get_month_calendar()
             self._update_calendar_days_table()
             if old_date.year != self.date.year:
                 self.query_one("#subtitle", Label).update(self.date.strftime("%Y"))
@@ -117,10 +118,9 @@ class DatePicker(Widget, can_focus=True):
                 self.query_one("#month", Button).label = self.date.strftime("%B")
 
         self.query_one("#title", Label).update(self.date.strftime("%a, %b %d"))
-        self._month_calendar = self._create_month_calendar()
         self._set_highlighted_day()
 
-    def _create_month_calendar(self) -> list[list[int | None]]:
+    def _get_month_calendar(self) -> list[list[int | None]]:
         month_calendar = [
             [day if day != 0 else None for day in week]
             for week in calendar.monthcalendar(self.date.year, self.date.month)
@@ -131,9 +131,7 @@ class DatePicker(Widget, can_focus=True):
     def _update_calendar_days_table(self) -> None:
         table = self.query_one("#calendar-days-table", DataTable)
         table.clear()
-        month_calendar = self._create_month_calendar()
-
-        table.add_rows(month_calendar)
+        table.add_rows(self._month_calendar)
 
     def _set_highlighted_day(self) -> None:
         table = self.query_one("#calendar-days-table", DataTable)
