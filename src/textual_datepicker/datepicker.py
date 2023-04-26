@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.coordinate import Coordinate
 from textual.widget import Widget
-from textual.widgets import Button, DataTable, Label
+from textual.widgets import Button, DataTable, Input, Label
 
 
 class DatePicker(Widget, can_focus=True):
@@ -167,3 +167,30 @@ class DatePicker(Widget, can_focus=True):
         if isinstance(event.value, int):
             new_date = self.date.replace(day=event.value)
             self.update(new_date)
+
+
+class DateInput(Widget):
+    DEFAULT_CSS = """
+    DateInput {
+        height: auto;
+        width: auto;
+    }
+
+    DateInput #date-input-container {
+        height: auto;
+        width: auto;
+    }
+
+    DateInput #date-input-field {
+        width: 20;
+    }
+
+    DateInput #date-input-btn {
+        max-width: 5;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        with Horizontal(id="date-input-container"):
+            yield Input(f"{datetime.date.today()}", id="date-input-field")
+            yield Button("\u2637", id="date-input-btn")
