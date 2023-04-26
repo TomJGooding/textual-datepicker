@@ -190,7 +190,18 @@ class DateInput(Widget):
     }
     """
 
+    def __init__(
+        self,
+        date: datetime.date | None = None,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
+        self.date = "" if date is None else date
+
     def compose(self) -> ComposeResult:
         with Horizontal(id="date-input-container"):
-            yield Input(f"{datetime.date.today()}", id="date-input-field")
+            yield Input(f"{self.date}", placeholder="Date", id="date-input-field")
             yield Button("\u2637", id="date-input-btn")
