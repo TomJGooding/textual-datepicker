@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Footer
 
-from textual_datepicker.datepicker import DateInput, DatePicker
+from textual_datepicker.datepicker import DatePicker, DatePickerInput
 
 
 class DatePickerDemo(App):
@@ -15,7 +15,7 @@ class DatePickerDemo(App):
     ]
 
     def compose(self) -> ComposeResult:
-        yield DateInput()
+        yield DatePickerInput()
         yield DatePicker()
         yield Footer()
 
@@ -23,9 +23,9 @@ class DatePickerDemo(App):
         self.query_one(DatePicker).styles.visibility = "hidden"
 
     def on_date_picker_changed(self, event: DatePicker.Changed) -> None:
-        self.query_one(DateInput).value = event.value
+        self.query_one(DatePickerInput).value = event.value
 
-    def on_date_input_changed(self, event: DateInput.Changed) -> None:
+    def on_date_input_changed(self, event: DatePickerInput.Changed) -> None:
         self.query_one(DatePicker).value = event.value
 
     def on_button_pressed(self) -> None:
