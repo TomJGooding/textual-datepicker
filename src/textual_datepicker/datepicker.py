@@ -103,7 +103,7 @@ class DatePicker(Widget, can_focus=True):
     ) -> None:
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
         self.value = value
-        self._month_calendar = self._get_month_calendar()
+        self._monthcalendar = self._get_monthcalendar()
 
     def compose(self) -> ComposeResult:
         yield Label(self.value.strftime("%Y"), classes="header", id="subtitle")
@@ -132,7 +132,7 @@ class DatePicker(Widget, can_focus=True):
         new_value: datetime.date,
     ) -> None:
         if old_value.year != new_value.year or old_value.month != new_value.month:
-            self._month_calendar = self._get_month_calendar()
+            self._monthcalendar = self._get_monthcalendar()
             self._update_calendar_days_table()
             if old_value.year != new_value.year:
                 self.query_one("#subtitle", Label).update(self.value.strftime("%Y"))
@@ -145,23 +145,20 @@ class DatePicker(Widget, can_focus=True):
         self._set_highlighted_day()
         self.post_message(self.Changed(self, self.value))
 
-    def _get_month_calendar(self) -> list[list[int | None]]:
-        month_calendar = [
-            [day if day != 0 else None for day in week]
-            for week in calendar.monthcalendar(self.value.year, self.value.month)
-        ]
-
-        return month_calendar
+    def _get_monthcalendar(self) -> list[list[int]]:
+        return calendar.monthcalendar(self.value.year, self.value.month)
 
     def _update_calendar_days_table(self) -> None:
         table = self.query_one("#calendar-days-table", DataTable)
         table.clear()
-        table.add_rows(self._month_calendar)
+        table.add_rows(
+            [day if day != 0 else None for day in week] for week in self._monthcalendar
+        )
 
     def _set_highlighted_day(self) -> None:
         table = self.query_one("#calendar-days-table", DataTable)
         day = self.value.day
-        for row, week in enumerate(self._month_calendar):
+        for row, week in enumerate(self._monthcalendar):
             try:
                 column = week.index(day)
             except ValueError:
