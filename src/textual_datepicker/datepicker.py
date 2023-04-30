@@ -189,23 +189,23 @@ class DatePicker(Widget, can_focus=True):
             self.value = old_value.replace(day=event.value)
 
 
-class DateInput(Widget):
+class DatePickerInput(Widget):
     DEFAULT_CSS = """
-    DateInput {
+    DatePickerInput {
         height: auto;
         width: auto;
     }
 
-    DateInput #date-input-container {
+    DatePickerInput #datepickerinput-container {
         height: auto;
         width: auto;
     }
 
-    DateInput #date-input-field {
+    DatePickerInput #datepickerinput-field {
         width: 20;
     }
 
-    DateInput #date-input-btn {
+    DatePickerInput #datepickerinput-btn {
         max-width: 5;
     }
     """
@@ -214,14 +214,14 @@ class DateInput(Widget):
 
     class Changed(Message, bubble=True):
         def __init__(
-            self, dateinput: DateInput, value: Optional[datetime.date]
+            self, dateinput: DatePickerInput, value: Optional[datetime.date]
         ) -> None:
             super().__init__()
             self.value: Optional[datetime.date] = value
-            self.dateinput: DateInput = dateinput
+            self.dateinput: DatePickerInput = dateinput
 
         @property
-        def control(self) -> DateInput:
+        def control(self) -> DatePickerInput:
             return self.dateinput
 
     def __init__(
@@ -236,10 +236,12 @@ class DateInput(Widget):
         self.value = value
 
     def compose(self) -> ComposeResult:
-        with Horizontal(id="date-input-container"):
+        with Horizontal(id="datepickerinput-container"):
             input_value = "" if not self.value else self.value
-            yield Input(f"{input_value}", placeholder="Date", id="date-input-field")
-            yield Button("\u2637", id="date-input-btn")
+            yield Input(
+                f"{input_value}", placeholder="Date", id="datepickerinput-field"
+            )
+            yield Button("\u2637", id="datepickerinput-btn")
 
     def watch_value(self) -> None:
         self.query_one(Input).value = f"{self.value}"
