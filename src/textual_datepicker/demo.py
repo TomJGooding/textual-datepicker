@@ -26,7 +26,8 @@ class DatePickerDemo(App):
         self.query_one(DatePickerInput).value = event.value
 
     def on_date_input_changed(self, event: DatePickerInput.Changed) -> None:
-        self.query_one(DatePicker).value = event.value
+        if event.value is not None:
+            self.query_one(DatePicker).value = event.value
 
     def on_button_pressed(self) -> None:
         datepicker = self.query_one(DatePicker)
