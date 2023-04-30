@@ -22,6 +22,9 @@ class DatePickerDemo(App):
     def on_date_picker_changed(self, event: DatePicker.Changed) -> None:
         self.query_one(DateInput).value = event.value
 
+    def on_date_input_changed(self, event: DateInput.Changed) -> None:
+        self.query_one(DatePicker).value = event.value
+
 
 if __name__ == "__main__":
     app = DatePickerDemo()

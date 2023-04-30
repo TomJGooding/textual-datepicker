@@ -212,6 +212,18 @@ class DateInput(Widget):
 
     value = reactive[Optional[datetime.date]](None, init=False)
 
+    class Changed(Message, bubble=True):
+        def __init__(
+            self, dateinput: DateInput, value: Optional[datetime.date]
+        ) -> None:
+            super().__init__()
+            self.value: Optional[datetime.date] = value
+            self.dateinput: DateInput = dateinput
+
+        @property
+        def control(self) -> DateInput:
+            return self.dateinput
+
     def __init__(
         self,
         value: datetime.date | None = None,
@@ -231,3 +243,12 @@ class DateInput(Widget):
 
     def watch_value(self) -> None:
         self.query_one(Input).value = f"{self.value}"
+        self.post_message(self.Changed(self, self.value))
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        try:
+            new_value = datetime.datetime.strptime(event.value, "%Y-%m-%d").date()
+        except ValueError:
+            self.app.bell()
+        else:
+            self.value = new_value
