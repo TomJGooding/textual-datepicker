@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import calendar
 import datetime
+from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.coordinate import Coordinate
+from textual.message import Message
+from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Label
 
@@ -76,29 +81,41 @@ class DatePicker(Widget, can_focus=True):
     }
     """
 
+    value = reactive(datetime.date.today(), init=False)
+
+    class Changed(Message, bubble=True):
+        def __init__(self, datepicker: DatePicker, value: datetime.date) -> None:
+            super().__init__()
+            self.value: datetime.date = value
+            self.datepicker: DatePicker = datepicker
+
+        @property
+        def control(self) -> DatePicker:
+            return self.datepicker
+
     def __init__(
         self,
-        date: datetime.date = datetime.date.today(),
+        value: datetime.date = datetime.date.today(),
         name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
         disabled: bool = False,
     ) -> None:
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
-        self.date = date
+        self.value = value
         self._month_calendar = self._get_month_calendar()
 
     def compose(self) -> ComposeResult:
-        yield Label(self.date.strftime("%Y"), classes="header", id="subtitle")
-        yield Label(self.date.strftime("%a, %b %d"), classes="header", id="title")
+        yield Label(self.value.strftime("%Y"), classes="header", id="subtitle")
+        yield Label(self.value.strftime("%a, %b %d"), classes="header", id="title")
 
         with Horizontal(id="date-navigation"):
             yield Button("←", classes="left-arrow-btn", id="prev-month-btn")
-            yield Button(self.date.strftime("%B"), id="month", disabled=True)
+            yield Button(self.value.strftime("%B"), id="month", disabled=True)
             yield Button("→", classes="right-arrow-btn", id="next-month-btn")
 
             yield Button("←", classes="left-arrow-btn", id="prev-year-btn")
-            yield Button(self.date.strftime("%Y"), id="year", disabled=True)
+            yield Button(self.value.strftime("%Y"), id="year", disabled=True)
             yield Button("→", classes="right-arrow-btn", id="next-year-btn")
 
         yield DataTable(id="calendar-days-table")
@@ -109,26 +126,29 @@ class DatePicker(Widget, can_focus=True):
         self._update_calendar_days_table()
         self._set_highlighted_day()
 
-    def update(self, date: datetime.date) -> None:
-        old_date = self.date
-        self.date = date
-
-        if old_date.year != self.date.year or old_date.month != self.date.month:
+    def watch_value(
+        self,
+        old_value: datetime.date,
+        new_value: datetime.date,
+    ) -> None:
+        if old_value.year != new_value.year or old_value.month != new_value.month:
             self._month_calendar = self._get_month_calendar()
             self._update_calendar_days_table()
-            if old_date.year != self.date.year:
-                self.query_one("#subtitle", Label).update(self.date.strftime("%Y"))
-                self.query_one("#year", Button).label = self.date.strftime("%Y")
-            if old_date.month != self.date.month:
-                self.query_one("#month", Button).label = self.date.strftime("%B")
+            if old_value.year != new_value.year:
+                self.query_one("#subtitle", Label).update(self.value.strftime("%Y"))
+                self.query_one("#year", Button).label = self.value.strftime("%Y")
+            if old_value.month != new_value.month:
+                self.query_one("#month", Button).label = self.value.strftime("%B")
 
-        self.query_one("#title", Label).update(self.date.strftime("%a, %b %d"))
+        self.value = new_value
+        self.query_one("#title", Label).update(self.value.strftime("%a, %b %d"))
         self._set_highlighted_day()
+        self.post_message(self.Changed(self, self.value))
 
     def _get_month_calendar(self) -> list[list[int | None]]:
         month_calendar = [
             [day if day != 0 else None for day in week]
-            for week in calendar.monthcalendar(self.date.year, self.date.month)
+            for week in calendar.monthcalendar(self.value.year, self.value.month)
         ]
 
         return month_calendar
@@ -140,7 +160,7 @@ class DatePicker(Widget, can_focus=True):
 
     def _set_highlighted_day(self) -> None:
         table = self.query_one("#calendar-days-table", DataTable)
-        day = self.date.day
+        day = self.value.day
         for row, week in enumerate(self._month_calendar):
             try:
                 column = week.index(day)
@@ -151,22 +171,22 @@ class DatePicker(Widget, can_focus=True):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prev-month-btn":
-            new_date = self.date - relativedelta(months=1)
+            new_date = self.value - relativedelta(months=1)
         elif event.button.id == "next-month-btn":
-            new_date = self.date + relativedelta(months=1)
+            new_date = self.value + relativedelta(months=1)
         elif event.button.id == "prev-year-btn":
-            new_date = self.date - relativedelta(years=1)
+            new_date = self.value - relativedelta(years=1)
         elif event.button.id == "next-year-btn":
-            new_date = self.date + relativedelta(years=1)
+            new_date = self.value + relativedelta(years=1)
         else:
             return
 
-        self.update(new_date)
+        self.value = new_date
 
     def on_data_table_cell_selected(self, event: DataTable.CellSelected) -> None:
         if isinstance(event.value, int):
-            new_date = self.date.replace(day=event.value)
-            self.update(new_date)
+            old_value = self.value
+            self.value = old_value.replace(day=event.value)
 
 
 class DateInput(Widget):
@@ -190,18 +210,24 @@ class DateInput(Widget):
     }
     """
 
+    value = reactive[Optional[datetime.date]](None, init=False)
+
     def __init__(
         self,
-        date: datetime.date | None = None,
+        value: datetime.date | None = None,
         name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
         disabled: bool = False,
     ) -> None:
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
-        self.date = "" if date is None else date
+        self.value = value
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="date-input-container"):
-            yield Input(f"{self.date}", placeholder="Date", id="date-input-field")
+            input_value = "" if not self.value else self.value
+            yield Input(f"{input_value}", placeholder="Date", id="date-input-field")
             yield Button("\u2637", id="date-input-btn")
+
+    def watch_value(self) -> None:
+        self.query_one(Input).value = f"{self.value}"

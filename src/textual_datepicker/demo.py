@@ -19,6 +19,9 @@ class DatePickerDemo(App):
         yield DatePicker()
         yield Footer()
 
+    def on_date_picker_changed(self, event: DatePicker.Changed) -> None:
+        self.query_one(DateInput).value = event.value
+
 
 if __name__ == "__main__":
     app = DatePickerDemo()
