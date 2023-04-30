@@ -19,11 +19,19 @@ class DatePickerDemo(App):
         yield DatePicker()
         yield Footer()
 
+    def on_mount(self) -> None:
+        self.query_one(DatePicker).styles.visibility = "hidden"
+
     def on_date_picker_changed(self, event: DatePicker.Changed) -> None:
         self.query_one(DateInput).value = event.value
 
     def on_date_input_changed(self, event: DateInput.Changed) -> None:
         self.query_one(DatePicker).value = event.value
+
+    def on_button_pressed(self) -> None:
+        datepicker = self.query_one(DatePicker)
+        datepicker.styles.visibility = "visible"
+        datepicker.focus()
 
 
 if __name__ == "__main__":
